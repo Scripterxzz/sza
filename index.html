@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -66,6 +66,23 @@
             color: white;
             border: none;
         }
+
+        .message {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 5px 0;
+            position: relative;
+        }
+
+        .delete-message {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: red;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
     </style>
 
     <!-- Firebase SDKs -->
@@ -78,7 +95,7 @@
         const firebaseConfig = {
             apiKey: "AIzaSyDL13vl-Lkbl5dmgIKhHHKFP5XHS3dxdbs",
             authDomain: "szaa-2ad2c.firebaseapp.com",
-            databaseURL: "https://szaa-2ad2c-default-rtdb.firebaseio.com/", // URL вашей Realtime Database
+            databaseURL: "https://szaa-2ad2c-default-rtdb.firebaseio.com/",
             projectId: "szaa-2ad2c",
             storageBucket: "szaa-2ad2c.appspot.com",
             messagingSenderId: "278010120474",
@@ -117,7 +134,6 @@
                 auth.createUserWithEmailAndPassword(email, password)
                     .then(userCredential => {
                         alert('Регистрация успешна!');
-                        // Скрытие полей регистрации и входа
                         document.getElementById('auth-section').style.display = 'none';
                         loadNews(); // Загрузка новостей после регистрации
                     })
@@ -134,7 +150,6 @@
                 auth.signInWithEmailAndPassword(email, password)
                     .then(userCredential => {
                         alert('Вход успешен!');
-                        // Скрытие полей регистрации и входа
                         document.getElementById('auth-section').style.display = 'none';
                         loadNews(); // Загрузка новостей после входа
                     })
@@ -148,7 +163,6 @@
             logoutBtn.addEventListener('click', () => {
                 auth.signOut().then(() => {
                     alert('Выход успешен!');
-                    // Показать поля регистрации и входа снова
                     document.getElementById('auth-section').style.display = 'block';
                 });
             });
@@ -158,18 +172,29 @@
             submitNewsBtn.addEventListener('click', () => {
                 const title = document.getElementById('news-title').value;
                 const content = document.getElementById('news-content').value;
-                if (title && content) {
-                    const newsRef = database.ref('news'); // Ссылка на коллекцию новостей
-                    newsRef.push({
-                        title,
-                        content,
-                        timestamp: firebase.database.ServerValue.TIMESTAMP
-                    }).then(() => {
-                        alert('Новость опубликована!');
-                        loadNews();
-                    }).catch(error => {
-                        alert('Ошибка при публикации новости: ' + error.message);
-                    });
+                
+                // Получаем текущего пользователя
+                const user = auth.currentUser;
+
+                if (user) {
+                    // Проверяем, что адрес электронной почты соответствует разрешенному
+                    if (user.email === 'exstr1m@gmail.com' && title && content) {
+                        const newsRef = database.ref('news'); // Ссылка на коллекцию новостей
+                        newsRef.push({
+                            title,
+                            content,
+                            timestamp: firebase.database.ServerValue.TIMESTAMP
+                        }).then(() => {
+                            alert('Новость опубликована!');
+                            loadNews();
+                        }).catch(error => {
+                            alert('Ошибка при публикации новости: ' + error.message);
+                        });
+                    } else {
+                        alert('У вас нет прав для публикации новостей.');
+                    }
+                } else {
+                    alert('Вы должны войти в систему, чтобы публиковать новости.');
                 }
             });
 
@@ -191,6 +216,67 @@
                         alert('Ошибка загрузки новостей: ' + error.message);
                     });
             }
+
+            // Чат с создателем
+            const chatBox = document.getElementById('chat-box');
+            const sendMessageBtn = document.getElementById('send-message');
+            const chatMessageInput = document.getElementById('chat-message');
+
+            sendMessageBtn.addEventListener('click', () => {
+                const messageContent = chatMessageInput.value;
+                if (messageContent) {
+                    const messagesRef = database.ref('messages'); // Ссылка на коллекцию сообщений
+                    messagesRef.push({
+                        content: messageContent,
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    }).then(() => {
+                        chatMessageInput.value = ''; // Очищаем поле ввода
+                    }).catch(error => {
+                        alert('Ошибка при отправке сообщения: ' + error.message);
+                    });
+                }
+            });
+
+            // Загрузка сообщений
+            function loadMessages() {
+                const messagesRef = database.ref('messages'); // Ссылка на коллекцию сообщений
+                messagesRef.orderByChild('timestamp').on('value', (snapshot) => {
+                    chatBox.innerHTML = ''; // Очищаем чат перед загрузкой
+                    snapshot.forEach(childSnapshot => {
+                        const messageData = childSnapshot.val();
+                        const messageId = childSnapshot.key; // Получаем ID сообщения
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = 'message';
+                        messageDiv.innerHTML = `
+                            <p>${messageData.content}</p>
+                            <button class="delete-message" data-id="${messageId}">Удалить</button>
+                        `;
+                        chatBox.appendChild(messageDiv);
+                    });
+                    attachDeleteListeners(); // Подключаем слушателей удаления
+                });
+            }
+
+            // Удаление сообщения
+            function attachDeleteListeners() {
+                const deleteButtons = document.querySelectorAll('.delete-message');
+                deleteButtons.forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const messageId = event.target.dataset.id;
+                        const messageRef = database.ref('messages/' + messageId);
+                        messageRef.remove()
+                            .then(() => {
+                                alert('Сообщение удалено!');
+                            })
+                            .catch(error => {
+                                alert('Ошибка при удалении сообщения: ' + error.message);
+                            });
+                    });
+                });
+            }
+
+            // Инициализация загрузки сообщений
+            loadMessages();
         });
     </script>
 </head>
