@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сайт Читов</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        nav ul li {
+            margin: 0 15px;
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            padding: 20px;
+        }
+
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+
+        input, button, textarea {
+            margin: 5px 0;
+            padding: 10px;
+            width: 100%;
+        }
+
+        button {
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+        }
+    </style>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Инициализация Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDL13vl-Lkbl5dmgIKhHHKFP5XHS3dxdbs",
+            authDomain: "szaa-2ad2c.firebaseapp.com",
+            projectId: "szaa-2ad2c",
+            storageBucket: "szaa-2ad2c.appspot.com",
+            messagingSenderId: "278010120474",
+            appId: "1:278010120474:web:8fddea5e77b714836b84a3",
+            measurementId: "G-EV7XQ4KP31"
+        };
+        
+        // Инициализация приложения
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        document.addEventListener("DOMContentLoaded", function() {
+            // Вкладки
+            const newsTab = document.getElementById('news-tab');
+            const downloadTab = document.getElementById('download-tab');
+            const chatTab = document.getElementById('chat-tab');
+            const newsSection = document.getElementById('news-section');
+            const downloadSection = document.getElementById('download-section');
+            const chatSection = document.getElementById('chat-section');
+            
+            newsTab.addEventListener('click', () => showSection(newsSection));
+            downloadTab.addEventListener('click', () => showSection(downloadSection));
+            chatTab.addEventListener('click', () => showSection(chatSection));
+
+            function showSection(section) {
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+                section.classList.add('active');
+            }
+
+            // Регистрация
+            const registerBtn = document.getElementById('register-btn');
+            registerBtn.addEventListener('click', () => {
+                const email = document.getElementById('register-email').value;
+                const password = document.getElementById('register-password').value;
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then(userCredential => {
+                        alert('Регистрация успешна!');
+                        // Скрытие полей регистрации и входа
+                        document.getElementById('auth-section').style.display = 'none';
+                        loadNews(); // Загрузка новостей после регистрации
+                    })
+                    .catch(error => {
+                        alert(error.message);
+                    });
+            });
+
+            // Вход
+            const loginBtn = document.getElementById('login-btn');
+            loginBtn.addEventListener('click', () => {
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                auth.signInWithEmailAndPassword(email, password)
+                    .then(userCredential => {
+                        alert('Вход успешен!');
+                        // Скрытие полей регистрации и входа
+                        document.getElementById('auth-section').style.display = 'none';
+                        loadNews(); // Загрузка новостей после входа
+                    })
+                    .catch(error => {
+                        alert(error.message);
+                    });
+            });
+
+            // Выход
+            const logoutBtn = document.getElementById('logout-btn');
+            logoutBtn.addEventListener('click', () => {
+                auth.signOut().then(() => {
+                    alert('Выход успешен!');
+                    // Показать поля регистрации и входа снова
+                    document.getElementById('auth-section').style.display = 'block';
+                });
+            });
+
+            // Публикация новости
+            const submitNewsBtn = document.getElementById('submit-news');
+            submitNewsBtn.addEventListener('click', () => {
+                const title = document.getElementById('news-title').value;
+                const content = document.getElementById('news-content').value;
+                if (title && content) {
+                    db.collection('news').add({
+                        title,
+                        content,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    }).then(() => {
+                        alert('Новость опубликована!');
+                        loadNews();
+                    }).catch(error => {
+                        alert('Ошибка при публикации новости: ' + error.message);
+                    });
+                }
+            });
+
+            // Загрузка новостей
+            function loadNews() {
+                const newsFeed = document.getElementById('news-feed');
+                newsFeed.innerHTML = '';
+                db.collection('news').orderBy('timestamp', 'desc').get()
+                    .then(snapshot => {
+                        snapshot.forEach(doc => {
+                            const newsItem = document.createElement('div');
+                            newsItem.innerHTML = `<h3>${doc.data().title}</h3><p>${doc.data().content}</p>`;
+                            newsFeed.appendChild(newsItem);
+                        });
+                    })
+                    .catch(error => {
+                        alert('Ошибка загрузки новостей: ' + error.message);
+                    });
+            }
+        });
+    </script>
+</head>
+<body>
+    <header>
+        <h1>Сайт Читов</h1>
+        <nav>
+            <ul>
+                <li><a href="#" id="news-tab">Новости</a></li>
+                <li><a href="#" id="download-tab">Скачать Читы</a></li>
+                <li><a href="#" id="chat-tab">Чат с Создателем</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="news-section" class="tab-content active">
+            <h2>Новости</h2>
+            <div id="news-feed"></div>
+            <div id="news-form">
+                <h3>Добавить новость</h3>
+                <input type="text" id="news-title" placeholder="Заголовок">
+                <textarea id="news-content" placeholder="Содержание новости"></textarea>
+                <button id="submit-news">Опубликовать</button>
+            </div>
+        </section>
+
+        <section id="download-section" class="tab-content">
+            <h2>Скачать Читы</h2>
+            <ul id="cheats-list">
+                <li><a href="https://example.com/cheat1">Чит 1</a></li>
+                <li><a href="https://example.com/cheat2">Чит 2</a></li>
+            </ul>
+        </section>
+
+        <section id="chat-section" class="tab-content">
+            <h2>Чат с Создателем</h2>
+            <div id="chat-box"></div>
+            <textarea id="chat-message" placeholder="Введите сообщение"></textarea>
+            <button id="send-message">Отправить</button>
+        </section>
+    </main>
+
+    <footer>
+        <div id="auth-section">
+            <h3>Регистрация</h3>
+            <input type="email" id="register-email" placeholder="Email">
+            <input type="password" id="register-password" placeholder="Пароль">
+            <button id="register-btn">Зарегистрироваться</button>
+            <h3>Вход</h3>
+            <input type="email" id="login-email" placeholder="Email">
+            <input type="password" id="login-password" placeholder="Пароль">
+            <button id="login-btn">Войти</button>
+        </div>
+        <button id="logout-btn" style="display: none;">Выйти</button>
+    </footer>
+</body>
+</html>
