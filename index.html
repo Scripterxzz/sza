@@ -71,13 +71,14 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
 
     <script>
         // Инициализация Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDL13vl-Lkbl5dmgIKhHHKFP5XHS3dxdbs",
             authDomain: "szaa-2ad2c.firebaseapp.com",
+            databaseURL: "https://szaa-2ad2c-default-rtdb.firebaseio.com/", // URL вашей Realtime Database
             projectId: "szaa-2ad2c",
             storageBucket: "szaa-2ad2c.appspot.com",
             messagingSenderId: "278010120474",
@@ -88,7 +89,7 @@
         // Инициализация приложения
         const app = firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
-        const db = firebase.firestore();
+        const database = firebase.database(); // Инициализация Realtime Database
 
         document.addEventListener("DOMContentLoaded", function() {
             // Вкладки
@@ -158,10 +159,11 @@
                 const title = document.getElementById('news-title').value;
                 const content = document.getElementById('news-content').value;
                 if (title && content) {
-                    db.collection('news').add({
+                    const newsRef = database.ref('news'); // Ссылка на коллекцию новостей
+                    newsRef.push({
                         title,
                         content,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
                     }).then(() => {
                         alert('Новость опубликована!');
                         loadNews();
@@ -175,11 +177,13 @@
             function loadNews() {
                 const newsFeed = document.getElementById('news-feed');
                 newsFeed.innerHTML = '';
-                db.collection('news').orderBy('timestamp', 'desc').get()
+                const newsRef = database.ref('news'); // Ссылка на коллекцию новостей
+                newsRef.orderByChild('timestamp').once('value')
                     .then(snapshot => {
-                        snapshot.forEach(doc => {
+                        snapshot.forEach(childSnapshot => {
                             const newsItem = document.createElement('div');
-                            newsItem.innerHTML = `<h3>${doc.data().title}</h3><p>${doc.data().content}</p>`;
+                            const newsData = childSnapshot.val();
+                            newsItem.innerHTML = `<h3>${newsData.title}</h3><p>${newsData.content}</p>`;
                             newsFeed.appendChild(newsItem);
                         });
                     })
