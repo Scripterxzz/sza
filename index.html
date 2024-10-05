@@ -114,13 +114,17 @@
             const newsTab = document.getElementById('news-tab');
             const downloadTab = document.getElementById('download-tab');
             const chatTab = document.getElementById('chat-tab');
+            const videoTab = document.getElementById('video-tab');
+
             const newsSection = document.getElementById('news-section');
             const downloadSection = document.getElementById('download-section');
             const chatSection = document.getElementById('chat-section');
+            const videoSection = document.getElementById('video-section');
             
             newsTab.addEventListener('click', () => showSection(newsSection));
             downloadTab.addEventListener('click', () => showSection(downloadSection));
             chatTab.addEventListener('click', () => showSection(chatSection));
+            videoTab.addEventListener('click', () => showSection(videoSection));
 
             function showSection(section) {
                 document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -283,12 +287,13 @@
 </head>
 <body>
     <header>
-        <h1>Сайт Читов</h1>
+        <h1>SZA BLOX</h1>
         <nav>
             <ul>
                 <li><a href="#" id="news-tab">Новости</a></li>
                 <li><a href="#" id="download-tab">Скачать Читы</a></li>
-                <li><a href="#" id="chat-tab">Чат с Создателем</a></li>
+                <li><a href="#" id="chat-tab">Игры</a></li>
+                <li><a href="#" id="video-tab">Видео</a></li>
             </ul>
         </nav>
     </header>
@@ -308,16 +313,23 @@
         <section id="download-section" class="tab-content">
             <h2>Скачать Читы</h2>
             <ul id="cheats-list">
-                <li><a href="https://example.com/cheat1">Чит 1</a></li>
-                <li><a href="https://example.com/cheat2">Чит 2</a></li>
+                <li><a href="https://moneyz.fun/XpPvVU">Exspenisve Update</a></li>
+                <li><a href="https://moneyz.fun/upmMMS">Excellent Client 1.16.5</a></li>
             </ul>
         </section>
 
         <section id="chat-section" class="tab-content">
-            <h2>Чат с Создателем</h2>
+            <h2>Скачай пиратские игры тут!</h2>
             <div id="chat-box"></div>
-            <textarea id="chat-message" placeholder="Введите сообщение"></textarea>
-            <button id="send-message">Отправить</button>
+              <li><a href="https://example.com/cheat1">Игра 1</a></li>
+              <li><a href="https://example.com/cheat2">Игра 2</a></li>
+        </section>
+
+       <section id="video-section" class="tab-content">
+            <h2>Скачай пиратские игры тут!</h2>
+            <div id="chat-box"></div>
+              <li><a href="https://example.com/cheat1">Видео 1</a></li>
+              <li><a href="https://example.com/cheat2">Видео 2</a></li>
         </section>
     </main>
 
